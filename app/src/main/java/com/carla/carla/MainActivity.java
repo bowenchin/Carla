@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
-                        timer_count.setText("Data Received = " + dataInPrint);
+                        timer_count.setText(dataInPrint);
                         inputData.setText("Data Received = " + dataInPrint);
 
                         int dataLength = dataInPrint.length();							//get length of data received
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 //                            sensorView3.setText(" Sensor 3 Voltage = " + sensor3 + "V");
 
                             trip_counter.setText(inputData);
-                            Log.d(TAG,dataInPrint);
+                            Log.d(TAG, "Data received: " + dataInPrint);
 
                         }
                         recDataString.delete(0, recDataString.length()); 					//clear all string data
