@@ -1,9 +1,13 @@
 package com.carla.carla;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,15 +20,30 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "CARLA";
 
     private TextView date;
     private TextView trip_update;
     private TextView duration_update;
+    private TextView trip_counter;
 
     Handler bluetoothIn;
     final int handlerState = 0;        				 //used to identify handler message
+    private BluetoothAdapter btAdapter = null;
+    private BluetoothSocket btSocket = null;
+    private StringBuilder recDataString = new StringBuilder();
+
+    private ConnectedThread mConnectedThread;
+
+    // SPP UUID service - this should work for most devices
+    private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    // String for MAC address
+    private static String address;
 
 
     @Override
@@ -48,7 +67,123 @@ public class MainActivity extends AppCompatActivity {
         duration_update = (TextView) findViewById(R.id.duration_update_time);
         duration_update.setText(new SimpleDateFormat("HH:mm").format(new Date()));
 
+        trip_counter = (TextView)findViewById(R.id.trip_counter);
 
+        bluetoothIn = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                if (msg.what == handlerState) {										//if message is what we want
+                    String readMessage = (String) msg.obj;                                                                // msg.arg1 = bytes from connect thread
+                    recDataString.append(readMessage);      								//keep appending to string until ~
+                    int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
+                    if (endOfLineIndex > 0) {                                           // make sure there data before ~
+                        String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
+//                        txtString.setText("Data Received = " + dataInPrint);
+                        int dataLength = dataInPrint.length();							//get length of data received
+//                        txtStringLength.setText("String Length = " + String.valueOf(dataLength));
+
+                        if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
+                        {
+//                            String sensor0 = recDataString.substring(1, 5);             //get sensor value from string between indices 1-5
+//                            String sensor1 = recDataString.substring(6, 10);            //same again...
+//                            String sensor2 = recDataString.substring(11, 15);
+//                            String sensor3 = recDataString.substring(16, 20);
+//
+//                            sensorView0.setText(" Sensor 0 Voltage = " + sensor0 + "V");	//update the textviews with sensor values
+//                            sensorView1.setText(" Sensor 1 Voltage = " + sensor1 + "V");
+//                            sensorView2.setText(" Sensor 2 Voltage = " + sensor2 + "V");
+//                            sensorView3.setText(" Sensor 3 Voltage = " + sensor3 + "V");
+
+                            trip_counter.setText(recDataString.substring(1,2));
+                            Log.d(TAG,dataInPrint);
+
+                        }
+                        recDataString.delete(0, recDataString.length()); 					//clear all string data
+                        // strIncom =" ";
+                        dataInPrint = " ";
+                    }
+                }
+            }
+        };
+
+        btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
+        checkBTState();
+
+    }
+
+
+
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+
+        return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+        //creates secure outgoing connecetion with BT device using UUID
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //Get MAC address from DeviceListActivity via intent
+        Intent intent = getIntent();
+
+        //Get the MAC address from the DeviceListActivty via EXTRA
+        address = intent.getStringExtra(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+        //address = "9C:1D:58:A3:BD:7F";
+
+        //create device and set the MAC address
+        BluetoothDevice device = btAdapter.getRemoteDevice("9C:1D:58:A3:BD:7F");
+
+        try {
+            btSocket = createBluetoothSocket(device);
+        } catch (IOException e) {
+            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
+        }
+        // Establish the Bluetooth socket connection.
+        try
+        {
+            btSocket.connect();
+        } catch (IOException e) {
+            try
+            {
+                btSocket.close();
+            } catch (IOException e2)
+            {
+                //insert code to deal with this
+            }
+        }
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();
+
+        //I send a character when resuming.beginning transmission to check device is connected
+        //If it is not an exception will be thrown in the write method and finish() will be called
+        mConnectedThread.write("x");
+
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        try
+        {
+            //Don't leave Bluetooth sockets open when leaving activity
+            btSocket.close();
+        } catch (IOException e2) {
+            //insert code to deal with this
+        }
+    }
+
+    //Checks that the Android device Bluetooth is available and prompts to be turned on if off
+    private void checkBTState() {
+
+        if(btAdapter==null) {
+            Toast.makeText(getBaseContext(), "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+        } else {
+            if (btAdapter.isEnabled()) {
+            } else {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
+            }
+        }
     }
 
     //create new class for connect thread
@@ -71,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
             mmOutStream = tmpOut;
         }
 
+
         public void run() {
             byte[] buffer = new byte[256];
             int bytes;
@@ -78,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
             // Keep looping to listen for received messages
             while (true) {
                 try {
-                    bytes = mmInStream.read(buffer);            //read bytes from input buffer
+                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
                     String readMessage = new String(buffer, 0, bytes);
                     // Send the obtained bytes to the UI Activity via handler
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
@@ -95,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 //if you cannot write, close the application
                 Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-                finish();
+                //finish();
 
             }
         }
