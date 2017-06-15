@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView trip_update;
     private TextView duration_update;
     private TextView trip_counter;
+    private TextView timer_count;
 
     Handler bluetoothIn;
     final int handlerState = 0;        				 //used to identify handler message
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         duration_update.setText(new SimpleDateFormat("HH:mm").format(new Date()));
 
         trip_counter = (TextView)findViewById(R.id.trip_counter);
+        timer_count = (TextView)findViewById(R.id.timer);
 
         bluetoothIn = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
-//                        txtString.setText("Data Received = " + dataInPrint);
+                        timer_count.setText("Data Received = " + dataInPrint);
                         int dataLength = dataInPrint.length();							//get length of data received
 //                        txtStringLength.setText("String Length = " + String.valueOf(dataLength));
 
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         //address = "9C:1D:58:A3:BD:7F";
 
         //create device and set the MAC address
-        BluetoothDevice device = btAdapter.getRemoteDevice("9C:1D:58:A3:BD:7F");
+        BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
         try {
             btSocket = createBluetoothSocket(device);
