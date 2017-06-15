@@ -31,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView duration_update;
     private TextView trip_counter;
     private TextView timer_count;
+    private TextView inputData;
+
+    private int counter = 0;
 
     Handler bluetoothIn;
     final int handlerState = 0;        				 //used to identify handler message
@@ -70,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
         trip_counter = (TextView)findViewById(R.id.trip_counter);
         timer_count = (TextView)findViewById(R.id.timer);
+        inputData = (TextView)findViewById(R.id.inputData);
 
         bluetoothIn = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -80,8 +84,16 @@ public class MainActivity extends AppCompatActivity {
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
                         timer_count.setText("Data Received = " + dataInPrint);
+                        inputData.setText("Data Received = " + dataInPrint);
+
                         int dataLength = dataInPrint.length();							//get length of data received
 //                        txtStringLength.setText("String Length = " + String.valueOf(dataLength));
+                        String inputData = dataInPrint.substring(1,endOfLineIndex);
+                        //int counterData = Integer.parseInt(inputData);
+//                        if(inputData.equals("1")){
+//                            counter++;
+//                        }
+
 
                         if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
                         {
@@ -95,13 +107,13 @@ public class MainActivity extends AppCompatActivity {
 //                            sensorView2.setText(" Sensor 2 Voltage = " + sensor2 + "V");
 //                            sensorView3.setText(" Sensor 3 Voltage = " + sensor3 + "V");
 
-                            trip_counter.setText(recDataString.substring(1,2));
+                            trip_counter.setText(inputData);
                             Log.d(TAG,dataInPrint);
 
                         }
                         recDataString.delete(0, recDataString.length()); 					//clear all string data
                         // strIncom =" ";
-                        dataInPrint = " ";
+                        //dataInPrint = " ";
                     }
                 }
             }
