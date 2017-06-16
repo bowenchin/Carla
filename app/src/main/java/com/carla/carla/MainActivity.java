@@ -25,8 +25,9 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "CARLA";
-    private static final int numSamples = 30;
-    private static final int MAX_ATTEMPTS = 15;
+    private static final int numSamples = 25;
+    private static final int MAX_ATTEMPTS = 25;
+
 
     private TextView date;
     private TextView trip_update;
@@ -37,20 +38,16 @@ public class MainActivity extends AppCompatActivity {
 
     private String input;
 
-    private boolean inRange;
-    private int attempts;
     private int flag;
     private long sumArray = 0;
     private int countTimes = 0;
-    private long startTime = 0;
-    private long endTime = 0;
-    private boolean lastRead;
+    private boolean lastRead = false;
 
     private long tStart;
     private long tEnd;
     private long tDelta;
     private double elapsedSeconds;
-    private int timeFlag;
+    private int attempts = 0;
 
     Handler bluetoothIn;
     final int handlerState = 0;        				 //used to identify handler message
@@ -103,14 +100,9 @@ public class MainActivity extends AppCompatActivity {
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
 //                        timer_count.setText(dataInPrint);
-                        inputData.setText("Data Received = " + dataInPrint);
+                        inputData.setText("Recent status: " + dataInPrint);
 
                         input = dataInPrint.substring(0, endOfLineIndex); //data from Arduino via BT
-
-                        inRange = false;
-                        lastRead = false;
-                        countTimes = 0;
-                        attempts = 0;
 
                         //BEACON STATUS PROCESSING
                         if (input.equals("IN")) {
@@ -124,53 +116,52 @@ public class MainActivity extends AppCompatActivity {
                         for (int i = 0; i < numSamples; i++) {
                             samples[i] = flag;
                         }
-                        lastRead = false;
 
-//                        for(int i = numSamples; i > 0; i--){
-//                            samples[i] = samples[i-1];
-//                        }
-                        samples[0] = flag;
+                        for(int i = numSamples-1; i > 0; i--){
+                            samples[i] = samples[i-1];
+                        }
 
+                        //sumArray to normalize data
                         sumArray = 0;
                         for (int i = 0; i < numSamples; i++) {
                             sumArray = sumArray + samples[i];
                         }
 
                         if(sumArray > 0){
-                            if(!lastRead){
+                            if(!lastRead) {
                                 tStart = System.currentTimeMillis();
-                                trip_counter.setText(String.valueOf(countTimes));
-                            }
-                            lastRead = true;
-                        }
-                        else {
-                            if(lastRead){
-                                tEnd = System.currentTimeMillis();
-                                tDelta = tEnd - tStart;
-                                elapsedSeconds = tDelta / 1000.0;
-                                timer_count.setText(String.valueOf(elapsedSeconds) + " sec");
                                 countTimes++;
+                                trip_counter.setText(String.valueOf(countTimes));
+                                Log.d("countTimes: ", String.valueOf(countTimes));
+                                Log.d("Current time: ", String.valueOf(tStart));
+
+                                lastRead = true;
+
                             }
+
+                            }
+                            else{
+                                if(lastRead) {
+//                                        attempts++;
+//                                        if(attempts > MAX_ATTEMPTS){
+                                            tEnd = System.currentTimeMillis();
+                                            tDelta = tEnd - tStart;
+                                            elapsedSeconds = tDelta / 1000.0;
+                                            timer_count.setText(String.valueOf(elapsedSeconds) + " sec");
+                                            Log.d("elapsedSeconds: ", String.valueOf(elapsedSeconds));
+
+                                            countTimes++;
+                                            trip_counter.setText(String.valueOf(countTimes));
+
+                                }
+
                             lastRead = false;
+
                         }
-
-
-//                        if(lastRead == 0){
-//                            tStart = System.currentTimeMillis();
-////                                countTimes++;
-//                            lastRead = 1;
-//                        }
-////                            lastRead = 1;
-//                        else  {
-//                                tEnd = System.currentTimeMillis();
-//                                tDelta = tEnd - tStart;
-//                                elapsedSeconds = tDelta / 1000.0;
-//                                timer_count.setText(String.valueOf(elapsedSeconds) + " sec");
-//
-//                                lastRead = 0;
-//                            }
                     }
-                }
+
+                    }
+
 
 //                        if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
 //                        {
@@ -179,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
 
 
                 recDataString.delete(0, recDataString.length());                    //clear all string data
-//                    }
 
             }
         };

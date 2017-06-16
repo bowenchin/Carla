@@ -114,9 +114,10 @@
                             android:layout_height="wrap_content"
                             android:paddingEnd="8dp"
                             android:paddingStart="8dp"
-                            android:text="Lina is all good, her bathroom activity seems normal today." />
+                            android:text="Lina is all good, her routine seems normal today." />
 
                         <Button
+                            android:visibility="invisible"
                             android:id="@+id/ok_button"
                             style="?android:buttonBarButtonStyle"
                             android:layout_width="wrap_content"
@@ -151,7 +152,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:padding="8dp"
-                            android:text="Number of trips to bathroom"
+                            android:text="Room Activity"
                             android:textColor="#000000"
                             android:textStyle="bold"
                             android:id="@+id/textView5" />
@@ -197,6 +198,7 @@
 
                         <Button
                             android:id="@+id/ok_button"
+                            android:visibility="invisible"
                             style="?android:buttonBarButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -234,10 +236,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:padding="8dp"
-                            android:text="Duration in bathroom"
+                            android:text="Duration in room"
                             android:textColor="#000000"
                             android:textStyle="bold"
-                            android:id="@+id/textView5" />
+                            android:id="@+id/textView5"
+                            />
 
                         <TextView
                             android:id="@+id/timer"
@@ -288,7 +291,9 @@
                             android:textColor="@color/colorAccent"
                             android:layout_alignParentBottom="true"
                             android:layout_alignParentLeft="true"
-                            android:layout_alignParentStart="true" />
+                            android:layout_alignParentStart="true"
+                            android:visibility="invisible"
+                            />
 
                     </RelativeLayout>
 
@@ -301,7 +306,6 @@
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp"
                     android:layout_marginBottom="16dp"
                     android:padding="5dp"
                     app:layout_constraintLeft_toLeftOf="parent"
@@ -317,7 +321,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:padding="8dp"
-                            android:text="Data"
+                            android:text="Status"
                             android:textColor="#000000"
                             android:textStyle="bold"
                             android:id="@+id/textView5" />
@@ -346,7 +350,9 @@
                             android:textColor="@color/colorAccent"
                             android:layout_alignParentBottom="true"
                             android:layout_alignParentLeft="true"
-                            android:layout_alignParentStart="true" />
+                            android:layout_alignParentStart="true"
+                            android:visibility="invisible"
+                            />
 
                     </RelativeLayout>
 
