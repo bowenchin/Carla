@@ -126,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                         lastRead = false;
 
-                        for(int i = numSamples; i > 0; i--){
-                            samples[i] = samples[i-1];
-                        }
+//                        for(int i = numSamples; i > 0; i--){
+//                            samples[i] = samples[i-1];
+//                        }
                         samples[0] = flag;
 
                         sumArray = 0;
@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             lastRead = false;
                         }
-                        
+
 
 //                        if(lastRead == 0){
 //                            tStart = System.currentTimeMillis();
