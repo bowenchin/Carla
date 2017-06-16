@@ -25,6 +25,7 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "CARLA";
+    private static final int numSamples = 30;
 
     private TextView date;
     private TextView trip_update;
@@ -33,7 +34,20 @@ public class MainActivity extends AppCompatActivity {
     private TextView timer_count;
     private TextView inputData;
 
-    private int counter = 0;
+    private String input;
+
+    private int counter;
+    private int flag;
+    private long sumArray = 0;
+    private int countTimes = 0;
+    private long startTime = 0;
+    private long endTime = 0;
+
+    private long tStart;
+    private long tEnd;
+    private long tDelta;
+    private double elapsedSeconds;
+    private int timeFlag;
 
     Handler bluetoothIn;
     final int handlerState = 0;        				 //used to identify handler message
@@ -48,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
 
     // String for MAC address
     private static String address;
+
+    int[] samples = new int[numSamples];
 
 
     @Override
@@ -83,37 +99,77 @@ public class MainActivity extends AppCompatActivity {
                     int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
-                        timer_count.setText(dataInPrint);
+//                        timer_count.setText(dataInPrint);
                         inputData.setText("Data Received = " + dataInPrint);
 
-                        int dataLength = dataInPrint.length();							//get length of data received
-//                        txtStringLength.setText("String Length = " + String.valueOf(dataLength));
-                        String inputData = dataInPrint.substring(1,endOfLineIndex);
-                        //int counterData = Integer.parseInt(inputData);
-//                        if(inputData.equals("1")){
-//                            counter++;
-//                        }
+                        input = dataInPrint.substring(1,endOfLineIndex);
 
+                        timeFlag = 0;
+
+
+                        //BEACON STATUS PROCESSING
+                        if(input.equals("IN")){
+                            flag = 1;
+                            counter+=1;
+                            trip_counter.setText(String.valueOf(counter));
+                            tStart = System.currentTimeMillis();
+                            timeFlag = 1;
+
+                        }
+                        else if (input.equals("OUT")){
+                            flag = 0;
+                            if(timeFlag==1) {
+                                tEnd = System.currentTimeMillis();
+                                tDelta = tEnd - tStart;
+                                elapsedSeconds = tDelta / 1000.0;
+                                timer_count.setText(elapsedSeconds + " seconds");
+                                timeFlag = 0;
+                            }
+                        }
+                        /*
+                        //initialize array
+                        for (int i = 0; i < numSamples; i++) {
+                            samples[i] = 0;
+                        }
+                        lastRead = 0;
+
+                        for(int i = 0; i > numSamples; i--){
+                            samples[i] = samples[i-1];
+                        }
+                        samples[0] = flag;
+                        sumArray = 0;
+                        for(int i = 0; i < numSamples; i++){
+                            sumArray = sumArray + samples[i];
+                        }
+
+                        if(sumArray > 0){
+                            if(flag == 0){
+                                startTime = System.currentTimeMillis();
+                                countTimes++;
+
+                                flag = 1;
+                            }
+                            else if (flag == 1){
+                                endTime = System.currentTimeMillis() - startTime;
+                                timer_count.setText(Long.toString(endTime/1000) + "seconds");
+
+                                flag = 0;
+                            }
+                        }
+
+                        Log.d(TAG, "FLAG: " + flag);
+                        Log.d(TAG, "LAST READ: " + lastRead);
+
+                        */
 
                         if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
                         {
-//                            String sensor0 = recDataString.substring(1, 5);             //get sensor value from string between indices 1-5
-//                            String sensor1 = recDataString.substring(6, 10);            //same again...
-//                            String sensor2 = recDataString.substring(11, 15);
-//                            String sensor3 = recDataString.substring(16, 20);
-//
-//                            sensorView0.setText(" Sensor 0 Voltage = " + sensor0 + "V");	//update the textviews with sensor values
-//                            sensorView1.setText(" Sensor 1 Voltage = " + sensor1 + "V");
-//                            sensorView2.setText(" Sensor 2 Voltage = " + sensor2 + "V");
-//                            sensorView3.setText(" Sensor 3 Voltage = " + sensor3 + "V");
 
-                            trip_counter.setText(inputData);
-                            Log.d(TAG, "Data received: " + dataInPrint);
+                            trip_counter.setText(String.valueOf(countTimes));
+                            Log.d(TAG, "Data received: " + input);
 
                         }
                         recDataString.delete(0, recDataString.length()); 					//clear all string data
-                        // strIncom =" ";
-                        //dataInPrint = " ";
                     }
                 }
             }
