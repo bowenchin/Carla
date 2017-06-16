@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "CARLA";
     private static final int numSamples = 30;
+    private static final int MAX_ATTEMPTS = 15;
 
     private TextView date;
     private TextView trip_update;
@@ -36,12 +37,14 @@ public class MainActivity extends AppCompatActivity {
 
     private String input;
 
-    private int counter;
+    private boolean inRange;
+    private int attempts;
     private int flag;
     private long sumArray = 0;
     private int countTimes = 0;
     private long startTime = 0;
     private long endTime = 0;
+    private boolean lastRead;
 
     private long tStart;
     private long tEnd;
@@ -93,85 +96,91 @@ public class MainActivity extends AppCompatActivity {
 
         bluetoothIn = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (msg.what == handlerState) {										//if message is what we want
+                if (msg.what == handlerState) {                                        //if message is what we want
                     String readMessage = (String) msg.obj;                                                                // msg.arg1 = bytes from connect thread
-                    recDataString.append(readMessage);      								//keep appending to string until ~
+                    recDataString.append(readMessage);                                    //keep appending to string until ~
                     int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
 //                        timer_count.setText(dataInPrint);
                         inputData.setText("Data Received = " + dataInPrint);
 
-                        input = dataInPrint.substring(1,endOfLineIndex);
+                        input = dataInPrint.substring(0, endOfLineIndex); //data from Arduino via BT
 
-                        timeFlag = 0;
-
+                        inRange = false;
+                        lastRead = false;
+                        countTimes = 0;
+                        attempts = 0;
 
                         //BEACON STATUS PROCESSING
-                        if(input.equals("IN")){
+                        if (input.equals("IN")) {
                             flag = 1;
-                            counter+=1;
-                            trip_counter.setText(String.valueOf(counter));
-                            tStart = System.currentTimeMillis();
-                            timeFlag = 1;
 
-                        }
-                        else if (input.equals("OUT")){
+                        } else if (input.equals("OUT")) {
                             flag = 0;
-                            if(timeFlag==1) {
-                                tEnd = System.currentTimeMillis();
-                                tDelta = tEnd - tStart;
-                                elapsedSeconds = tDelta / 1000.0;
-                                timer_count.setText(elapsedSeconds + " seconds");
-                                timeFlag = 0;
-                            }
                         }
-                        /*
+
                         //initialize array
                         for (int i = 0; i < numSamples; i++) {
-                            samples[i] = 0;
+                            samples[i] = flag;
                         }
-                        lastRead = 0;
+                        lastRead = false;
 
-                        for(int i = 0; i > numSamples; i--){
+                        for(int i = numSamples; i > 0; i--){
                             samples[i] = samples[i-1];
                         }
                         samples[0] = flag;
+
                         sumArray = 0;
-                        for(int i = 0; i < numSamples; i++){
+                        for (int i = 0; i < numSamples; i++) {
                             sumArray = sumArray + samples[i];
                         }
 
                         if(sumArray > 0){
-                            if(flag == 0){
-                                startTime = System.currentTimeMillis();
+                            if(!lastRead){
+                                tStart = System.currentTimeMillis();
+                                trip_counter.setText(String.valueOf(countTimes));
+                            }
+                            lastRead = true;
+                        }
+                        else {
+                            if(lastRead){
+                                tEnd = System.currentTimeMillis();
+                                tDelta = tEnd - tStart;
+                                elapsedSeconds = tDelta / 1000.0;
+                                timer_count.setText(String.valueOf(elapsedSeconds) + " sec");
                                 countTimes++;
-
-                                flag = 1;
                             }
-                            else if (flag == 1){
-                                endTime = System.currentTimeMillis() - startTime;
-                                timer_count.setText(Long.toString(endTime/1000) + "seconds");
-
-                                flag = 0;
-                            }
+                            lastRead = false;
                         }
+                        
 
-                        Log.d(TAG, "FLAG: " + flag);
-                        Log.d(TAG, "LAST READ: " + lastRead);
-
-                        */
-
-                        if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
-                        {
-
-                            trip_counter.setText(String.valueOf(countTimes));
-                            Log.d(TAG, "Data received: " + input);
-
-                        }
-                        recDataString.delete(0, recDataString.length()); 					//clear all string data
+//                        if(lastRead == 0){
+//                            tStart = System.currentTimeMillis();
+////                                countTimes++;
+//                            lastRead = 1;
+//                        }
+////                            lastRead = 1;
+//                        else  {
+//                                tEnd = System.currentTimeMillis();
+//                                tDelta = tEnd - tStart;
+//                                elapsedSeconds = tDelta / 1000.0;
+//                                timer_count.setText(String.valueOf(elapsedSeconds) + " sec");
+//
+//                                lastRead = 0;
+//                            }
                     }
                 }
+
+//                        if (recDataString.charAt(0) == '#')								//if it starts with # we know it is what we are looking for
+//                        {
+                trip_counter.setText(String.valueOf(countTimes));
+                Log.d(TAG, "Data received: " + input);
+
+
+                recDataString.delete(0, recDataString.length());                    //clear all string data
+//                    }
+
             }
         };
 
